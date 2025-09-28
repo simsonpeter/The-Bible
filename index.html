@@ -48,29 +48,13 @@
     </div>
 
     <script>
-        // Bible versions configuration
+        // Bible versions configuration - using actual book file names
         const VERSIONS = {
             kjv: {
                 name: "King James Version",
                 language: "English",
                 folder: "kjv",
                 books: [
-                    "genesis", "exodus", "leviticus", "numbers", "deuteronomy",
-                    "joshua", "judges", "ruth", "1samuel", "2samuel",
-                    "1kings", "2kings", "1chronicles", "2chronicles", "ezra",
-                    "nehemiah", "esther", "job", "psalms", "proverbs",
-                    "ecclesiastes", "songofsolomon", "isaiah", "jeremiah", "lamentations",
-                    "ezekiel", "daniel", "hosea", "joel", "amos",
-                    "obadiah", "jonah", "micah", "nahum", "habakkuk",
-                    "zephaniah", "haggai", "zechariah", "malachi",
-                    "matthew", "mark", "luke", "john", "acts",
-                    "romans", "1corinthians", "2corinthians", "galatians", "ephesians",
-                    "philippians", "colossians", "1thessalonians", "2thessalonians", "1timothy",
-                    "2timothy", "titus", "philemon", "hebrews", "james",
-                    "1peter", "2peter", "1john", "2john", "3john",
-                    "jude", "revelation"
-                ],
-                bookNames: [
                     "Genesis", "Exodus", "Leviticus", "Numbers", "Deuteronomy",
                     "Joshua", "Judges", "Ruth", "1 Samuel", "2 Samuel",
                     "1 Kings", "2 Kings", "1 Chronicles", "2 Chronicles", "Ezra",
@@ -89,42 +73,27 @@
             },
             rvr: {
                 name: "Reina Valera 1960",
-                language: "Español",
+                language: "Español", 
                 folder: "rvr",
                 books: [
-                    "genesis", "exodo", "levitico", "numeros", "deuteronomio",
-                    "josue", "jueces", "rut", "1samuel", "2samuel",
-                    "1reyes", "2reyes", "1cronicas", "2cronicas", "esdras",
-                    "nehemias", "ester", "job", "salmos", "proverbios",
-                    "eclesiastes", "cantsolom", "isaias", "jeremias", "lamentaciones",
-                    "ezequiel", "daniel", "oseas", "joel", "amos",
-                    "abdias", "jonas", "miqueas", "nahum", "habacuc",
-                    "sofonias", "hageo", "zacarias", "malacai",
-                    "mateo", "marcos", "lucas", "juan", "hechos",
-                    "romanos", "1corintios", "2corintios", "galatas", "efesios",
-                    "filipenses", "colosenses", "1tesalonicenses", "2tesalonicenses", "1timoteo",
-                    "2timoteo", "tito", "filemon", "hebreos", "santiago",
-                    "1pedro", "2pedro", "1juan", "2juan", "3juan",
-                    "judas", "apocalipsis"
-                ],
-                bookNames: [
-                    "Génesis", "Éxodo", "Levítico", "Números", "Deuteronomio",
-                    "Josué", "Jueces", "Rut", "1 Samuel", "2 Samuel",
-                    "1 Reyes", "2 Reyes", "1 Crónicas", "2 Crónicas", "Esdras",
-                    "Nehemías", "Ester", "Job", "Salmos", "Proverbios",
-                    "Eclesiastés", "Cantares", "Isaías", "Jeremías", "Lamentaciones",
-                    "Ezequiel", "Daniel", "Oseas", "Joel", "Amós",
-                    "Abdías", "Jonás", "Miqueas", "Nahum", "Habacuc",
-                    "Sofonías", "Hageo", "Zacarías", "Malaquías",
+                    "Genesis", "Exodo", "Levitico", "Numeros", "Deuteronomio",
+                    "Josue", "Jueces", "Rut", "1 Samuel", "2 Samuel",
+                    "1 Reyes", "2 Reyes", "1 Cronicas", "2 Cronicas", "Esdras",
+                    "Nehemias", "Ester", "Job", "Salmos", "Proverbios",
+                    "Eclesiastes", "Cantares", "Isaias", "Jeremias", "Lamentaciones",
+                    "Ezequiel", "Daniel", "Oseas", "Joel", "Amos",
+                    "Abdias", "Jonas", "Miqueas", "Nahum", "Habacuc",
+                    "Sofonias", "Hageo", "Zacarias", "Malaquias",
                     "Mateo", "Marcos", "Lucas", "Juan", "Hechos",
-                    "Romanos", "1 Corintios", "2 Corintios", "Gálatas", "Efesios",
+                    "Romanos", "1 Corintios", "2 Corintios", "Galatas", "Efesios",
                     "Filipenses", "Colosenses", "1 Tesalonicenses", "2 Tesalonicenses", "1 Timoteo",
-                    "2 Timoteo", "Tito", "Filemón", "Hebreos", "Santiago",
+                    "2 Timoteo", "Tito", "Filemon", "Hebreos", "Santiago",
                     "1 Pedro", "2 Pedro", "1 Juan", "2 Juan", "3 Juan",
                     "Judas", "Apocalipsis"
                 ]
             }
             // Add more versions here following the same pattern
+            // The books array should match the exact filenames (with capitals and spaces)
         };
 
         // State
@@ -144,162 +113,4 @@
         }
 
         // Populate version dropdown
-        function populateVersionSelect() {
-            versionSelect.innerHTML = '<option value="">Select Version</option>';
-            
-            Object.keys(VERSIONS).forEach(versionCode => {
-                const version = VERSIONS[versionCode];
-                const option = document.createElement('option');
-                option.value = versionCode;
-                option.textContent = `${version.name} (${version.language})`;
-                versionSelect.appendChild(option);
-            });
-        }
-
-        // Setup event listeners
-        function setupEventListeners() {
-            versionSelect.addEventListener('change', handleVersionChange);
-            bookSelect.addEventListener('change', handleBookChange);
-            chapterSelect.addEventListener('change', displayChapter);
-        }
-
-        // Handle version selection
-        function handleVersionChange() {
-            const versionCode = versionSelect.value;
-            if (!versionCode) {
-                resetBookChapterSelectors();
-                return;
-            }
-
-            currentVersion = VERSIONS[versionCode];
-            versionInfo.textContent = `Version: ${currentVersion.name} (${currentVersion.language})`;
-            
-            bookSelect.disabled = false;
-            populateBookSelect();
-        }
-
-        // Populate book dropdown
-        function populateBookSelect() {
-            bookSelect.innerHTML = '<option value="">Select Book</option>';
-            
-            currentVersion.bookNames.forEach((bookName, index) => {
-                const option = document.createElement('option');
-                option.value = index;
-                option.textContent = bookName;
-                bookSelect.appendChild(option);
-            });
-        }
-
-        // Handle book selection
-        async function handleBookChange() {
-            const bookIndex = bookSelect.value;
-            if (bookIndex === '') {
-                resetChapterSelector();
-                return;
-            }
-
-            try {
-                bibleContent.innerHTML = '<p class="loading">Loading chapters...</p>';
-                const bookFilename = currentVersion.books[bookIndex];
-                const bookData = await loadBookData(currentVersion.folder, bookFilename);
-                
-                chapterSelect.disabled = false;
-                chapterSelect.innerHTML = '<option value="">Select Chapter</option>';
-                
-                // Book data format: array of chapters
-                for (let i = 0; i < bookData.length; i++) {
-                    const option = document.createElement('option');
-                    option.value = i;
-                    option.textContent = `Chapter ${i + 1}`;
-                    chapterSelect.appendChild(option);
-                }
-                
-                bibleContent.innerHTML = '<p class="placeholder">Select a chapter to read.</p>';
-            } catch (error) {
-                console.error('Error loading book:', error);
-                bibleContent.innerHTML = `
-                    <p class="error">❌ Error loading book</p>
-                    <p>${error.message}</p>
-                    <p><strong>Required folder structure:</strong></p>
-                    <ul>
-                        <li>📁 ${currentVersion.folder}/</li>
-                        <li>  ├── genesis.json</li>
-                        <li>  ├── exodus.json</li>
-                        <li>  ├── leviticus.json</li>
-                        <li>  └── ... (all 66 books with lowercase names)</li>
-                    </ul>
-                    <p><strong>How to set up:</strong></p>
-                    <ol>
-                        <li>Create folder: <strong>${currentVersion.folder}</strong></li>
-                        <li>Download book files with names like: <strong>${currentVersion.books[0]}.json</strong></li>
-                        <li>Place all 66 book files in the folder</li>
-                    </ol>
-                `;
-            }
-        }
-
-        // Load individual book file (e.g., genesis.json, exodus.json)
-        async function loadBookData(folder, bookFilename) {
-            const response = await fetch(`${folder}/${bookFilename}.json`);
-            
-            if (!response.ok) {
-                throw new Error(`Book file "${bookFilename}.json" not found in ${folder}/ folder`);
-            }
-            
-            return await response.json();
-        }
-
-        // Display selected chapter
-        async function displayChapter() {
-            const bookIndex = bookSelect.value;
-            const chapterIndex = chapterSelect.value;
-            
-            if (bookIndex === '' || chapterIndex === '') {
-                bibleContent.innerHTML = '<p class="placeholder">Select a chapter to read.</p>';
-                return;
-            }
-            
-            try {
-                const bookFilename = currentVersion.books[bookIndex];
-                const bookData = await loadBookData(currentVersion.folder, bookFilename);
-                const chapter = bookData[chapterIndex];
-                
-                let html = '';
-                chapter.forEach(verse => {
-                    // Handle different verse formats
-                    const verseNum = verse.verse || verse.v || verse[0] || '';
-                    const verseText = verse.text || verse.t || verse[1] || '';
-                    html += `
-                        <div class="verse">
-                            <span class="verse-number">${verseNum}</span>
-                            ${verseText}
-                        </div>
-                    `;
-                });
-                
-                bibleContent.innerHTML = html;
-            } catch (error) {
-                console.error('Error displaying chapter:', error);
-                bibleContent.innerHTML = `<p class="error">❌ Error loading chapter: ${error.message}</p>`;
-            }
-        }
-
-        // Reset selectors
-        function resetBookChapterSelectors() {
-            bookSelect.disabled = true;
-            bookSelect.innerHTML = '<option value="">Select Book</option>';
-            resetChapterSelector();
-        }
-
-        function resetChapterSelector() {
-            chapterSelect.disabled = true;
-            chapterSelect.innerHTML = '<option value="">Select Chapter</option>';
-            bibleContent.innerHTML = '<p class="placeholder">Select a version, book, and chapter to begin reading.</p>';
-            versionInfo.textContent = '';
-        }
-
-        // Start the app
-        document.addEventListener('DOMContentLoaded', init);
-    </script>
-</body>
-</html>
+        function
