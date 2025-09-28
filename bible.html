@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>📖 Multilingual Bible</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Georgia', serif; line-height: 1.6; background: #f8f9fa; color: #333; padding: 20px; }
+        .container { max-width: 800px; margin: 0 auto; }
+        header { text-align: center; margin-bottom: 30px; padding: 20px; background: white; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        header h1 { margin-bottom: 20px; color: #2c3e50; }
+        select { margin: 8px; padding: 10px; border: 2px solid #ddd; border-radius: 5px; font-size: 16px; min-width: 180px; }
+        .selectors { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-bottom: 20px; }
+        .bible-content { background: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); min-height: 400px; }
+        .verse { margin-bottom: 15px; padding-bottom: 15px; border-bottom: 1px solid #eee; }
+        .verse-number { font-weight: bold; color: #e74c3c; margin-right: 10px; }
+        .placeholder { text-align: center; color: #7f8c8d; font-style: italic; }
+        .error { color: #e74c3c; text-align: center; }
+        .loading { text-align: center; color: #3498db; }
+        .info { text-align: center; margin-top: 15px; font-size: 14px; color: #666; }
+        @media (max-width: 600px) { 
+            .selectors { flex-direction: column; align-items: center; }
+            select { width: 100%; max-width: 280px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>📖 Multilingual Bible</h1>
+            <select id="versionSelect">
+                <option value="">Select Version</option>
+            </select>
+            <div class="selectors">
+                <select id="bookSelect" disabled>
+                    <option value="">Select Book</option>
+                </select>
+                <select id="chapterSelect" disabled>
+                    <option value="">Select Chapter</option>
+                </select>
+            </div>
+            <div class="info" id="versionInfo"></div>
+        </header>
+        <div id="bibleContent" class="bible-content">
+            <p class="placeholder">Select a version, book, and chapter to begin reading.</p>
+        </div>
+    </div>
+
+    <script>
+        // Configuration for different Bible versions
+        const VERSIONS = {
+            kjv: {
+                name: "King James Version",
+                language: "English",
+                folder: "kjv"
+            },
+            web: {
+                name: "World English Bible", 
+                language: "English",
+                folder: "web"
+            },
+            rvr: {
+                name: "Reina Valera 1960",
+                language: "Español",
+                folder: "rvr"
+            },
+            ls: {
+                name: "Louis Segond",
+                language: "Français", 
+                folder: "ls"
+            }
+            // Add more versions here:
+            // esv: { name: "English Standard Version", language: "English", folder: "esv" }
+        };
+
+        // State
+        let currentVersion = null;
+        let booksData = null;
+
+        // DOM Elements
+        const versionSelect = document.getElementById('versionSelect');
+        const bookSelect = document.getElementById('bookSelect');
+        const chapterSelect = document.getElementById('chapterSelect');
+        const bibleContent = document.getElementById('bibleContent');
+        const versionInfo = document.getElementById('versionInfo');
+
+        // Initialize the app
+        function init() {
+            populateVersionSelect();
+            setupEventListeners();
+        }
+
+        // Populate version dropdown
+        function populateVersionSelect() {
+            versionSelect.innerHTML = '<option value="">Select Version</option>';
+            
+            Object.keys(VERSIONS).forEach(versionCode => {
+                const version = VERSIONS[versionCode];
+                const option = document.createElement('option');
+                option.value = versionCode;
+                option.textContent = `${version.name} (${version.language})`;
+                versionSelect.appendChild(option);
+            });
+        }
+
+        // Setup event listeners
+        function setupEventListeners() {
+            versionSelect.addEventListener('change', handleVersionChange);
+            bookSelect.addEventListener('change', handleBookChange);
+            chapterSelect.addEventListener('change', displayChapter);
+        }
+
+        // Handle version selection
+        async function handleVersionChange() {
+            const versionCode = versionSelect.value;
+            if (!versionCode) {
+                resetBookChapterSelectors();
+                return;
+            }
+
+            currentVersion = VERSIONS[versionCode];
+            versionInfo.textContent = `Version: ${currentVersion.name} (${currentVersion.language})`;
+            
+            try {
+                bibleContent.innerHTML = '<p class="loading">Loading books list...</p>';
+                booksData = await loadBooksData(currentVersion.folder);
+                bookSelect.disabled = false;
+                populateBookSelect();
+            } catch (error) {
+                console.error('Error loading version:', error);
+                bibleContent.innerHTML = `
+                    <p class="error">❌ Error loading ${currentVersion.name}</p>
+                    <p>${error.message}</p>
+                    <p><strong>Folder structure required:</strong></p>
+                    <ul>
+                        <li>📁 ${currentVersion.folder}/</li>
+                        <li>  ├── books.json</li>
+                        <li>  ├── 01.json (Genesis)</li>
+                        <li>  ├── 02.json (Exodus)</li>
+                        <li>  └── ... up to 66.json</li>
+                    </ul>
+                    <p><strong>How to set up:</strong></p>
+                    <ol>
+                        <li>Create folder: <strong>${currentVersion.folder}</strong></li>
+                        <li>Download <a href="https://raw.githubusercontent.com/scrollmapper/bible_databases/master/json/books.json" target="_blank">books.json</a> into this folder</li>
+                        <li>Download individual book files from the same source</li>
+                    </ol>
+                `;
+                versionInfo.textContent = '';
+            }
+        }
+
+        // Load books.json for the selected version
+        async function loadBooksData(folder) {
+            const response = await fetch(`${folder}/books.json`);
+            if (!response.ok) {
+                throw new Error(`books.json not found in ${folder}/ folder`);
+            }
+            return await response.json();
+        }
+
+        // Populate book dropdown
+        function populateBookSelect() {
+            bookSelect.innerHTML = '<option value="">Select Book</option>';
+            
+            // books.json format: array of book names
+            booksData.forEach((bookName, index) => {
+                const option = document.createElement('option');
+                option.value = index;
+                option.textContent = bookName;
+                bookSelect.appendChild(option);
+            });
+        }
+
+        // Handle book selection
+        async function handleBookChange() {
+            const bookIndex = bookSelect.value;
+            if (bookIndex === '') {
+                resetChapterSelector();
+                return;
+            }
+
+            try {
+                bibleContent.innerHTML = '<p class="loading">Loading chapters...</p>';
+                const bookData = await loadBookData(currentVersion.folder, bookIndex);
+                
+                chapterSelect.disabled = false;
+                chapterSelect.innerHTML = '<option value="">Select Chapter</option>';
+                
+                // Book data format: array of chapters, each chapter is array of verses
+                for (let i = 0; i < bookData.length; i++) {
+                    const option = document.createElement('option');
+                    option.value = i;
+                    option.textContent = `Chapter ${i + 1}`;
+                    chapterSelect.appendChild(option);
+                }
+                
+                bibleContent.innerHTML = '<p class="placeholder">Select a chapter to read.</p>';
+            } catch (error) {
+                console.error('Error loading book:', error);
+                bibleContent.innerHTML = `<p class="error">❌ Error loading book: ${error.message}</p>`;
+            }
+        }
+
+        // Load individual book file (e.g., 01.json, 02.json, etc.)
+        async function loadBookData(folder, bookIndex) {
+            // Convert to 2-digit format: 0 -> 01, 1 -> 02, etc.
+            const bookNumber = String(parseInt(bookIndex) + 1).padStart(2, '0');
+            const response = await fetch(`${folder}/${bookNumber}.json`);
+            
+            if (!response.ok) {
+                throw new Error(`Book file ${bookNumber}.json not found in ${folder}/ folder`);
+            }
+            
+            return await response.json();
+        }
+
+        // Display selected chapter
+        async function displayChapter() {
+            const bookIndex = bookSelect.value;
+            const chapterIndex = chapterSelect.value;
+            
+            if (bookIndex === '' || chapterIndex === '') {
+                bibleContent.innerHTML = '<p class="placeholder">Select a chapter to read.</p>';
+                return;
+            }
+            
+            try {
+                const bookData = await loadBookData(currentVersion.folder, bookIndex);
+                const chapter = bookData[chapterIndex];
+                
+                let html = '';
+                chapter.forEach(verse => {
+                    // Handle different verse formats
+                    const verseNum = verse.verse || verse.v || verse[0] || '';
+                    const verseText = verse.text || verse.t || verse[1] || '';
+                    html += `
+                        <div class="verse">
+                            <span class="verse-number">${verseNum}</span>
+                            ${verseText}
+                        </div>
+                    `;
+                });
+                
+                bibleContent.innerHTML = html;
+            } catch (error) {
+                console.error('Error displaying chapter:', error);
+                bibleContent.innerHTML = `<p class="error">❌ Error loading chapter: ${error.message}</p>`;
+            }
+        }
+
+        // Reset selectors
+        function resetBookChapterSelectors() {
+            bookSelect.disabled = true;
+            bookSelect.innerHTML = '<option value="">Select Book</option>';
+            resetChapterSelector();
+        }
+
+        function resetChapterSelector() {
+            chapterSelect.disabled = true;
+            chapterSelect.innerHTML = '<option value="">Select Chapter</option>';
+            bibleContent.innerHTML = '<p class="placeholder">Select a version, book, and chapter to begin reading.</p>';
+            versionInfo.textContent = '';
+        }
+
+        // Start the app
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>
